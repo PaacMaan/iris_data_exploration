@@ -1,0 +1,189 @@
+---
+title: "TP_5_Markdown"
+runtime: shiny
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+L’objectif : réaliser une application d’exploration des données (data iris) en utilisant la méthode de partitionnement k-means, instauré dans une architecture client serveur de Shiny, et la prsenté sous forme d'un document Markdown
+
+Exécution de l'application shiny_tp3 fourni au départ
+
+**1) Dans le bloc ci-dessous, on va bien voir l'exploration des données du data frame iris sous forme d'un graphique de 2D (x, y)**
+
+
+```{r, echo = TRUE}
+shinyApp(
+  
+  ui = pageWithSidebar(
+        headerPanel('Iris k-means clustering'),
+        sidebarPanel(
+          # injection des deux select input dans le UI avec un input numeric fixant le nombre de Cluster à 9
+          selectInput('xcol', 'X Variable', names(iris)),
+          selectInput('ycol', 'Y Variable', names(iris), selected=names(iris)[[2]]),
+          numericInput('clusters', 'Cluster count', 3,
+                       min = 1, max = 9)
+        ),
+        # ici on va bien visualiser le plot aui sera géneré dans le côté serveur à pqrtir des donnés fourni par l'utilisateur
+        mainPanel(
+          plotOutput('plot1')
+        )
+      ),
+  
+  server = function(input, output) {
+      # Combine the selected variables into a new data frame
+    selectedData <- reactive({
+      iris[, c(input$xcol, input$ycol)]
+    })
+    # definition de la méthode de classification supervisé K-means 
+    clusters <- reactive({
+      kmeans(selectedData(), input$clusters)
+    })
+    # generation du plot qui sera injecté dans le UI
+    output$plot1 <- renderPlot({
+      # ici j'ai defini 9 couleur manuellement, puisque le nombre de Cluster est deja fixe au 9 comme valeur maxiamle
+      palette(c("#E41A1C", "#377EB8", "#4DAF4A", "#984EA3",
+                "#FF7F00", "#FFFF33", "#A65628", "#F781BF", "#999999"))
+      
+      par(mar = c(5.1, 4.1, 0, 1))
+      # dessin du plot 2D(x,y) à partir du selectedData par la fonction plot
+      plot(selectedData(),
+           col = clusters()$cluster,
+           pch = 20, cex = 3)
+      points(clusters()$centers, pch = 4, cex = 4, lwd = 4)
+    })
+    },
+  
+  options = list(height = 500)
+)
+```
+
+**2) Dans le bloc ci-dessous, on va etendre le graphique fait dans la première pqrtie vers du 2D(x,y) vers un graphique 3D(x, y, z) en utilisant le ScatterPlot3d**
+
+```{r, echo = TRUE}
+library(shiny)
+library(RColorBrewer)
+library(scatterplot3d)
+shinyApp(
+  
+  ui = fluidPage(
+      headerPanel(h2("Exploration du dataframe Iris avec ScatterPlot 3D")),
+      sidebarLayout(
+        
+        sidebarPanel(
+          # injection des deux select input dans le UI avec un input numeric fixant le nombre de Cluster à 9
+          selectInput('xcol', 'variable x', names(iris),selected = "Petal.Width"),
+          selectInput('ycol', 'variable y', names(iris),selected = "Petal.Length"),
+          selectInput('zcol', 'variable z', names(iris)),
+          numericInput('clusters', 'Cluster count', 3,
+                       min = 1, max = 9)
+          ),
+        # ici on va bien visualiser le plot aui sera géneré dans le côté serveur à partir des donnés fourni par l'utilisateur
+        mainPanel(
+          plotOutput("plot_of_iris")
+        )
+      )
+    ),
+  
+  server = function(input, output) {
+      # Combine the selected variables into a new data frame
+      selectedData <- reactive({
+        iris[, c(input$xcol, input$ycol, input$zcol)]
+      })
+      # definition de la méthode de classification supervisé K-means 
+      clusters <- reactive({
+        kmeans(selectedData(), input$clusters)
+      })
+      # generation du plot qui sera injecté dans le UI
+      output$plot_of_iris <- renderPlot({
+      # dessin du plot 3D(x, y, z) à partir du selectedData en utilisant la fonction scatterplot3d
+      scatterplot3d(selectedData(),
+                      color = clusters()$cluster,
+                      pch=16,
+                      highlight.3d = FALSE,
+                      type = "p")
+        
+      })
+    },
+  
+  options = list(height = 500)
+)
+```
+
+**3) Dans le bloc ci-dessous on va voir une amélioration de cette application en changeant la méthode k-means par la méthode KNN, et voici les etapes : **
+
+- Selection des deux parametres qui vont etre affichés au niveau du graphe a travers 'Predictive Attribute X' et 'Predictive Attribute Y' 
+- Apres, on choisit n'importe quelle point des 150 points dans iris data comme un point cible, ainsi que le point dont la classe va être predictée via le KNN.
+- Et enfin on choisit le nombre de voisins "K" pour l'algorithme supervisée.
+- les points voisins utilisée par le KNN sont apparue en symbole orange (+).
+- le point cible est affiché avec un croix X et coloré par la class predicté par le KNN.
+
+```{r, echo = TRUE}
+library(shiny)
+library(RColorBrewer)
+library(scatterplot3d)
+library(pdist)
+library(class)
+shinyApp(
+  
+  ui = fluidPage(
+        headerPanel('Iris K-Nearest Neighbor'),
+        sidebarPanel(
+          # injection des deux select input dans le UI avec un input numeric fixant le nombre de Cluster à 9
+          selectInput('xcol', 'Variable X', setdiff(names(iris), 'Species')),
+          selectInput('ycol', 'Variable Y', setdiff(names(iris), 'Species'), selected=names(iris)[[2]]),
+          # les points ciblee par l'algorithme KNN
+          sliderInput('target', 'indice du point cible', 1, min = 1, max = dim(iris)[1]),
+          # nombre de voisins k qui seront predictee par l'algorithme KNN
+          sliderInput('k', 'Nombre de voisins (K)', 3, min = 1, max = 15)
+        ),
+        mainPanel(
+          # ici on va bien visualiser le plot aui sera géneré dans le côté serveur à partir des donnés fourni par l'utilisateur
+          plotOutput('plot1'),
+          # ici j'ai fait une comparaison avec la classe original et la classe predictee par la methode KNN
+          h3('Original class:'),
+          textOutput("originalClass"),
+          h3('KNN predicted class:'),
+          textOutput("predictedClass")
+        )
+),
+  
+  server = function(input, output, session) {
+      # Combine the selected variables into a new data frame
+        selectedData <- reactive({
+                            iris[, c(input$xcol, input$ycol)]
+                        })
+                
+        targetPoint <- reactive({
+                            selectedData()[input$target,]
+                       })
+        # definition de la méthode de classification supervisé KNN
+        predictedClass <- reactive({
+                            knn(selectedData(), targetPoint(), iris$Species, input$k)
+                          })
+        # generation du plot 2D(x, y) qui sera injecté dans le UI a partir du selectedData() choisi au depart 
+        output$plot1 <- renderPlot({
+            par(mar = c(5.1, 4.1, 0, 1))                
+            plot(selectedData(),
+                 col = unclass(iris$Species),
+                 pch = 20, cex = 3)                
+            
+            distances <- pdist(targetPoint(), selectedData())
+            nnIdxs <- order(as.matrix(distances))[1:input$k]  
+            # les points voisins pris par le KNN sont affichee par un (+) en orange .
+            points(selectedData()[nnIdxs,], pch = 3, cex = 4, lwd = 4, col="orange")
+            # le point cible est affichee avec un X et coloree par la classe predictee en utilisant le KNN
+            points(selectedData()[input$target,], pch = 4, cex = 4, lwd = 4, col=unclass(predictedClass()))
+                
+        })
+        # comparaison entre la classe originale et la classe predictee 
+        output$originalClass <- reactive({iris$Species[input$target]})
+        output$predictedClass <- reactive({predictedClass()})
+    },
+  
+  options = list(height = 500)
+)
+```
