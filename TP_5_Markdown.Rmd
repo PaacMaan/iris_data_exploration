@@ -10,9 +10,9 @@ knitr::opts_chunk$set(echo = TRUE)
 
 The main goal : build an application for iris data exploration by using the k-means algorithme, established in a clien - server architecture as shiny apps, and present it as a Markdown document
 
-Exécution de l'application shiny_tp3 fourni au départ
+Executing the sginy_tp3 application gived as start-up
 
-**1) Dans le bloc ci-dessous, on va bien voir l'exploration des données du data frame iris sous forme d'un graphique de 2D (x, y)**
+**1) in this bloc, We will see the exploration of the data frame `iris` in the form of a graph of 2D (x, y) **
 
 
 ```{r, echo = TRUE}
@@ -61,7 +61,7 @@ shinyApp(
 )
 ```
 
-**2) Dans le bloc ci-dessous, on va etendre le graphique fait dans la première pqrtie vers du 2D(x,y) vers un graphique 3D(x, y, z) en utilisant le ScatterPlot3d**
+**2) In the block below, we will extend the graph made in the first part from 2D (x, y) to a 3D graph (x, y, z) using the ScatterPlot3d**
 
 ```{r, echo = TRUE}
 library(shiny)
@@ -113,7 +113,7 @@ shinyApp(
 )
 ```
 
-**3) Dans le bloc ci-dessous on va voir une amélioration de cette application en changeant la méthode k-means par la méthode KNN, et voici les etapes : **
+**3) In the block below we will see an improvement of this application by changing the k-means algorithm by the KNN algorithm, and here are the steps:**
 
 - Selection des deux parametres qui vont etre affichés au niveau du graphe a travers 'Predictive Attribute X' et 'Predictive Attribute Y' 
 - Apres, on choisit n'importe quelle point des 150 points dans iris data comme un point cible, ainsi que le point dont la classe va être predictée via le KNN.
