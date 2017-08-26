@@ -8,7 +8,7 @@ output: html_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-L’objectif : réaliser une application d’exploration des données (data iris) en utilisant la méthode de partitionnement k-means, instauré dans une architecture client serveur de Shiny, et la prsenté sous forme d'un document Markdown
+The main goal : build an application for iris data exploration by using the k-means algorithme, established in a clien - server architecture as shiny apps, and present it as a Markdown document
 
 Exécution de l'application shiny_tp3 fourni au départ
 
